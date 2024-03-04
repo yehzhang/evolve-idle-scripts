@@ -1,19 +1,22 @@
 import { groupBy, uniq } from 'lodash';
 import technologiesJson from './technologies.json';
 
-interface Technology {
+interface TechnologyNode {
   readonly name: string;
   readonly epoch: string;
   readonly cost?: string;
   readonly extra?: string;
-  readonly blockedBy: Technology[];
-  readonly blocking: Technology[];
+  readonly blockedBy: TechnologyNode[];
+  readonly blocking: TechnologyNode[];
   readonly specialPrerequisites?: readonly string[];
+  readonly highlighted?: boolean;
 }
 
-function extractTechnologyTree(name: string): readonly Technology[] {
+function extractTechnologyTree(
+  searchName: string | string
+): readonly TechnologyNode[] {
   // Constructs the whole tree.
-  const technologies = new Map<string, Technology>(
+  const technologies = new Map<string, TechnologyNode>(
     technologiesJson.map((json) => [
       json.name,
       {
@@ -46,17 +49,15 @@ function extractTechnologyTree(name: string): readonly Technology[] {
     }
   }
 
-  // Extracts subtree.
-  const technology = technologies.get(name);
+  // Extracts subtree if any.
+  const technology = technologies.get(searchName);
   if (!technology) {
-    console.error('Unexpected technology', {
-      name,
-    });
-    throw new TypeError('1');
+    return [...technologies.values()];
   }
-  const result = new Set<Technology>();
+
+  const result = new Set<TechnologyNode>();
   // Finds blockers.
-  let queue: Technology[] = [technology];
+  let queue: TechnologyNode[] = [technology];
   for (const tech of queue) {
     result.add(tech);
     queue.push(...tech.blockedBy);
@@ -68,10 +69,13 @@ function extractTechnologyTree(name: string): readonly Technology[] {
     queue = queue.flatMap((item) => item.blocking);
   }
 
-  return [...result];
+  return [...result].map((item) => ({
+    ...item,
+    highlighted: item.name === searchName,
+  }));
 }
 
-function logGraph(technologies: readonly Technology[], techName: string) {
+function logGraph(technologies: readonly TechnologyNode[]) {
   const edges = technologies.flatMap(({ name, blockedBy }) =>
     blockedBy.map((blockedBy1) => `"${blockedBy1.name}" -> "${name}";`)
   );
@@ -89,9 +93,7 @@ function logGraph(technologies: readonly Technology[], techName: string) {
       .map(
         (tech) =>
           `"${tech.name}" ${
-            tech.name === techName
-              ? '[fillcolor="#00ff00" fontcolor="black"]'
-              : ''
+            tech.highlighted ? '[fillcolor="#00ff00" fontcolor="black"]' : ''
           };`
       )
       .join('\n');
@@ -119,4 +121,4 @@ function logGraph(technologies: readonly Technology[], techName: string) {
 }
 
 const techName = process.argv[2];
-logGraph(extractTechnologyTree(techName), techName);
+logGraph(extractTechnologyTree(techName));
