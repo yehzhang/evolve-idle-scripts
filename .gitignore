@@ -1,3 +1,5 @@
+tech-graph.svg
+
 *.env*
 cache.json
 .DS_Store
