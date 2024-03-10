@@ -12691,6 +12691,79 @@
       };
   }
 
+  function updateActiveTargetsUIForAutoBuild() {
+    const topBuildings = state.unlockedBuildings.slice(0, 10);
+    if (topBuildings.length) {
+        $('#active_targets .target-type-box.auto-build').show();
+    } else {
+        $('#active_targets .target-type-box.auto-build').hide();
+        return;
+    }
+
+    $('#active_targets ul.active_targets-list.auto-build').html(topBuildings.map(action => {
+        let actionName = action.name;
+        let actionTimeLeft = '';
+
+        if (action.count) {
+            actionName += `: ${Math.round(action.weighting)}`;
+        }
+
+        if (action.instance && action.instance.time) {
+            actionTimeLeft = `${action.instance.time}`;
+        }
+
+        const costs = action.cost;
+        const costsHTML = Object.keys(costs).map(resource => {
+            let res = resources[resource],
+                className = 'has-text-success',
+                resourceTimeLeft = '';
+
+            let resourceCost = costs[resource];
+
+            if (res.currentQuantity < resourceCost) {
+                className = 'has-text-danger';
+
+                if (res.maxQuantity >= resourceCost && res.income > 0) {
+                    const timeLeftRaw = (resourceCost - res.currentQuantity) / res.income;
+
+                    resourceTimeLeft = `${poly.timeFormat(timeLeftRaw)}`;
+                    if (res === resources.Soul_Gem) {
+                        resourceTimeLeft = `~${resourceTimeLeft}`;
+                    }
+                } else {
+                    actionTimeLeft = resourceTimeLeft = 'Never';
+                }
+            }
+
+            const progressBarWidth = (res.currentQuantity / resourceCost) * 100;
+
+            const isReplicatingClassName = (game.global.race.replicator && game.global.race.replicator.res === resource) ? 'is-replicating' : '';
+
+            return `
+                <li>
+                    <div class='active_targets-resource-row'>
+                        <div class='active_targets-resource-text'>
+                            <span class='${className}'>${res.title}</span>
+                        </div>
+                        <div class="percentage-full-progress-bar-wrapper ${isReplicatingClassName}">
+                            <div class="percentage-full-progress-bar" style="width: ${progressBarWidth}%;"></div>
+                        </div>
+                        <div class="active_targets-time-left">${resourceTimeLeft}</div>
+                    </div>
+                </li>`;
+        }).join('');
+
+        return `
+                <li class="active-target-li">
+                    <span class="active-target-title name">${actionName} </span><span class="active-target-title time">${actionTimeLeft}</span>
+                    <ul class="active_targets-sub-list">
+                        ${costsHTML}
+                    </ul>
+                </li>
+            `;
+    }));
+  }
+
   function updateActiveTargetsUI(queuedTargets, type) {
       if (queuedTargets.length) {
           $(`#active_targets .target-type-box.${type}`).show();
@@ -13487,6 +13560,9 @@
 
       KeyManager.finish();
       state.soulGemLast = resources.Soul_Gem.currentQuantity;
+
+      // Updates UI after states are updated.
+      updateActiveTargetsUIForAutoBuild();
   }
 
   function mainAutoEvolveScript() {
@@ -15760,6 +15836,10 @@
                       <div class="target-type-box arpa" style="display: none;">
                           <h2>A.R.P.A.</h2>
                           <ul class="active_targets-list arpa"></ul>
+                      </div>
+                      <div class="target-type-box auto-build" style="display: none;">
+                          <h2>AutoBuild</h2>
+                          <ul class="active_targets-list auto-build"></ul>
                       </div>
                   </div>
               </div>`);
