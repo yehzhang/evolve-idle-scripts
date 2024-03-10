@@ -12701,13 +12701,7 @@
     }
 
     $('#active_targets ul.active_targets-list.auto-build').html(topBuildings.map(action => {
-        let actionName = action.name;
         let actionTimeLeft = '';
-
-        if (action.count) {
-            actionName += `: ${Math.round(action.weighting)}`;
-        }
-
         if (action.instance && action.instance.time) {
             actionTimeLeft = `${action.instance.time}`;
         }
@@ -12736,9 +12730,7 @@
             }
 
             const progressBarWidth = (res.currentQuantity / resourceCost) * 100;
-
             const isReplicatingClassName = (game.global.race.replicator && game.global.race.replicator.res === resource) ? 'is-replicating' : '';
-
             return `
                 <li>
                     <div class='active_targets-resource-row'>
@@ -12754,13 +12746,12 @@
         }).join('');
 
         return `
-                <li class="active-target-li">
-                    <span class="active-target-title name">${actionName} </span><span class="active-target-title time">${actionTimeLeft}</span>
-                    <ul class="active_targets-sub-list">
-                        ${costsHTML}
-                    </ul>
-                </li>
-            `;
+            <li class="active-target-li">
+                <span class="active-target-title name">${action.name}: ${Math.round(action.weighting)} </span><span class="active-target-title time">${actionTimeLeft}</span>
+                <ul class="active_targets-sub-list">
+                    ${costsHTML}
+                </ul>
+            </li>`;
     }));
   }
 
