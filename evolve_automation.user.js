@@ -13589,6 +13589,11 @@
         StorageManager,
         TriggerManager,
         ProjectManager,
+        state,
+        resources,
+        buildings,
+        projects,
+        crafter,
       };
   }
 
