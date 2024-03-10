@@ -13578,6 +13578,18 @@
       });
       // Game disables workers in lab ui, we need to check that outside of debug hook
       setInterval(automateLab, 2500);
+
+      // Exports managers for debugging.
+      win.evolveAutomation = {
+        BuildingManager,
+        MarketManager,
+        SmelterManager,
+        FactoryManager,
+        GovernmentManager,
+        StorageManager,
+        TriggerManager,
+        ProjectManager,
+      };
   }
 
   function updateDebugData() {
